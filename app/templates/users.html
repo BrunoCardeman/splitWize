@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>👥 Usuários</h2>
+    <a href="/users/new" class="btn btn-primary">+ Novo Usuário</a>
+  </div>
+  {% if users %}
+  <table>
+    <thead><tr><th>#</th><th>Nome</th><th>E-mail</th></tr></thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#718096; margin-top:.5rem;">Nenhum usuário cadastrado ainda.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>💳 Despesas</h2>
+    <a href="/expenses/new" class="btn btn-primary">+ Nova Despesa</a>
+  </div>
+  {% if expenses %}
+  <table>
+    <thead>
+      <tr><th>#</th><th>Descrição</th><th>Valor</th><th>Pago por</th><th>Participantes</th></tr>
+    </thead>
+    <tbody>
+      {% for exp in expenses %}
+      <tr>
+        <td>{{ exp.id }}</td>
+        <td>{{ exp.description }}</td>
+        <td>R$ {{ "%.2f"|format(exp.amount) }}</td>
+        <td>{{ users.get(exp.paid_by_user_id, '?') }}</td>
+        <td>
+          {% for uid in exp.participant_ids %}
+            <span class="badge badge-green">{{ users.get(uid, uid) }}</span>
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#718096; margin-top:.5rem;">Nenhuma despesa registrada ainda.</p>
+  {% endif %}
+</div>
+{% endblock %}

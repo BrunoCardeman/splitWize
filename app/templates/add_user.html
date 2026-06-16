@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:480px; margin:auto;">
+  <h2>➕ Novo Usuário</h2>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <label>Nome</label>
+    <input type="text" name="name" placeholder="Ex: Ana Silva" required />
+    <label>E-mail</label>
+    <input type="email" name="email" placeholder="Ex: ana@email.com" required />
+    <button type="submit" class="btn btn-primary">Cadastrar</button>
+    <a href="/users" class="btn btn-secondary" style="margin-left:.5rem;">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
