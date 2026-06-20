@@ -12,42 +12,50 @@ class UserRepositorySQLite(AbstractUserRepository):
     def save(self, user: User) -> User:
         """Insere um usuário e retorna com ID."""
         conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (name, email) VALUES (?, ?)",
-            (user.name, user.email),
-        )
-        conn.commit()
-        user.id = cursor.lastrowid
-        conn.close()
-        return user
+        try:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO users (name, email) VALUES (?, ?)",
+                    (user.name, user.email),
+                )
+                user.id = cursor.lastrowid
+            return user
+        finally:
+            conn.close()
 
     def find_by_id(self, user_id: int) -> Optional[User]:
         """Busca usuário por ID."""
         conn = get_connection()
-        row = conn.execute(
-            "SELECT id, name, email FROM users WHERE id = ?", (user_id,)
-        ).fetchone()
-        conn.close()
-        if row:
-            return User(id=row["id"], name=row["name"], email=row["email"])
-        return None
+        try:
+            row = conn.execute(
+                "SELECT id, name, email FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if row:
+                return User(id=row["id"], name=row["name"], email=row["email"])
+            return None
+        finally:
+            conn.close()
 
     def find_all(self) -> List[User]:
         """Retorna todos os usuários."""
         conn = get_connection()
-        rows = conn.execute("SELECT id, name, email FROM users").fetchall()
-        conn.close()
-        return [User(id=r["id"], name=r["name"], email=r["email"]) for r in rows]
+        try:
+            rows = conn.execute("SELECT id, name, email FROM users").fetchall()
+            return [User(id=r["id"], name=r["name"], email=r["email"]) for r in rows]
+        finally:
+            conn.close()
 
     def find_by_email(self, email: str) -> Optional[User]:
         """Busca usuário por e-mail."""
         conn = get_connection()
-        row = conn.execute(
-            "SELECT id, name, email FROM users WHERE email = ?",
-            (email.lower(),),
-        ).fetchone()
-        conn.close()
-        if row:
-            return User(id=row["id"], name=row["name"], email=row["email"])
-        return None
+        try:
+            row = conn.execute(
+                "SELECT id, name, email FROM users WHERE email = ?",
+                (email.lower(),),
+            ).fetchone()
+            if row:
+                return User(id=row["id"], name=row["name"], email=row["email"])
+            return None
+        finally:
+            conn.close()

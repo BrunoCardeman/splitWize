@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card card-narrow">
+  <h2>➕ Novo Grupo</h2>
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+  <form method="POST">
+    <label for="name">Nome do Grupo</label>
+    <input type="text" id="name" name="name" placeholder="Ex: Viagem Praia, Apartamento 102" required />
+
+    <label for="created_by">Criador do Grupo</label>
+    <select id="created_by" name="created_by" required>
+      <option value="">-- selecione o criador --</option>
+      {% for u in users %}
+      <option value="{{ u.id }}" {% if session.get('user_id') == u.id %}selected{% endif %}>{{ u.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="checkbox-list-label">Selecione os outros participantes:</label>
+    <div class="checkbox-list">
+      {% for u in users %}
+      <div class="checkbox-item">
+        <input type="checkbox" id="user_{{ u.id }}" name="members" value="{{ u.id }}" />
+        <label for="user_{{ u.id }}">{{ u.name }} ({{ u.email }})</label>
+      </div>
+      {% endfor %}
+      {% if not users %}
+      <p class="form-subtitle">Cadastre usuários antes de criar um grupo.</p>
+      {% endif %}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Criar Grupo</button>
+      <a href="/groups" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

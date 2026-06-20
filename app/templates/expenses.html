@@ -1,33 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>💳 Despesas</h2>
-    <a href="/expenses/new" class="btn btn-primary">+ Nova Despesa</a>
+  <div class="expenses-title-row">
+    <h2>💳 Histórico Global de Despesas</h2>
   </div>
   {% if expenses %}
-  <table>
-    <thead>
-      <tr><th>#</th><th>Descrição</th><th>Valor</th><th>Pago por</th><th>Participantes</th></tr>
-    </thead>
-    <tbody>
-      {% for exp in expenses %}
-      <tr>
-        <td>{{ exp.id }}</td>
-        <td>{{ exp.description }}</td>
-        <td>R$ {{ "%.2f"|format(exp.amount) }}</td>
-        <td>{{ users.get(exp.paid_by_user_id, '?') }}</td>
-        <td>
-          {% for uid in exp.participant_ids %}
-            <span class="badge badge-green">{{ users.get(uid, uid) }}</span>
-          {% endfor %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Descrição</th>
+          <th>Valor</th>
+          <th>Grupo</th>
+          <th>Pago por</th>
+          <th>Participantes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exp in expenses %}
+        <tr>
+          <td>{{ exp.id }}</td>
+          <td class="expense-desc">{{ exp.description }}</td>
+          <td class="expense-val">R$ {{ "%.2f"|format(exp.amount) }}</td>
+          <td>
+            <a href="/groups/{{ exp.group_id }}" class="group-link">
+              {{ groups.get(exp.group_id, 'Grupo #' ~ exp.group_id) }}
+            </a>
+          </td>
+          <td>
+            <span class="badge badge-blue">{{ users.get(exp.paid_by_user_id, '?') }}</span>
+          </td>
+          <td>
+            <div class="participants-list">
+              {% for uid in exp.participant_ids %}
+                <span class="badge badge-green">
+                  {{ users.get(uid, uid) }}
+                </span>
+              {% endfor %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
-  <p style="color:#718096; margin-top:.5rem;">Nenhuma despesa registrada ainda.</p>
+  <p class="empty-state">
+    Nenhuma despesa registrada ainda no sistema.
+  </p>
   {% endif %}
 </div>
 {% endblock %}

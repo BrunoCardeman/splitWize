@@ -1,25 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>👥 Usuários</h2>
-    <a href="/users/new" class="btn btn-primary">+ Novo Usuário</a>
+  <div class="users-header">
+    <h2>👥 Usuários do Sistema</h2>
+    <a href="/users/new" class="btn btn-primary">➕ Novo Usuário</a>
   </div>
   {% if users %}
-  <table>
-    <thead><tr><th>#</th><th>Nome</th><th>E-mail</th></tr></thead>
-    <tbody>
-      {% for user in users %}
-      <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.name }}</td>
-        <td>{{ user.email }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th class="actions-header">Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.id }}</td>
+          <td class="user-name">{{ user.name }}</td>
+          <td class="user-email">{{ user.email }}</td>
+          <td class="user-actions">
+            <form method="POST" action="/groups/select_user" class="select-user-form">
+              <input type="hidden" name="user_id" value="{{ user.id }}" />
+              <button type="submit" class="btn btn-secondary btn-sm">
+                👤 Agir como
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
-  <p style="color:#718096; margin-top:.5rem;">Nenhum usuário cadastrado ainda.</p>
+  <p class="empty-state">Nenhum usuário cadastrado ainda no sistema.</p>
   {% endif %}
 </div>
 {% endblock %}

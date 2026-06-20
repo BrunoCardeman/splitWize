@@ -1,7 +1,6 @@
 """Rotas Flask para usuários."""
 from flask import Blueprint, redirect, render_template, request, url_for
 
-from infra.db.database import get_connection
 from infra.repositories.user_repository_sqlite import UserRepositorySQLite
 from use_cases.user_use_cases import CreateUserUseCase, ListUsersUseCase
 

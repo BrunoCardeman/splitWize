@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card card-narrow">
+  <h2>🔔 Minhas Notificações</h2>
+  <p class="notifications-desc">
+    Lembretes de pagamento enviados a você por outros membros do grupo.
+  </p>
+
+  {% if notifications %}
+  <div class="notifications-list">
+    {% for n in notifications %}
+    <div class="notification-card {% if not n.is_read %}unread{% endif %}">
+      <div>
+        <p class="notification-message {% if not n.is_read %}unread-message{% endif %}">
+          {{ n.message }}
+        </p>
+        <span class="notification-date">
+          Recebido em {{ n.created_at.strftime('%d/%m/%Y às %H:%M') }}
+        </span>
+        {% if not n.is_read %}
+          <span class="badge badge-green">Novo</span>
+        {% endif %}
+      </div>
+      
+      {% if not n.is_read %}
+      <form method="POST" action="/notifications/{{ n.id }}/read" class="read-notification-form">
+        <button type="submit" class="btn btn-secondary btn-sm">
+          Marcar como lida
+        </button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <h2 class="group-date">🎉</h2>
+    <p>Você não tem nenhuma notificação pendente.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

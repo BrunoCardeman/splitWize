@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>👤 Simulação de Login</h2>
+  <p class="simulation-desc">
+    Como esta versão não possui autenticação real, selecione um usuário abaixo para simular ações em nome dele (como enviar notificações ou visualizar saldos individuais).
+  </p>
+  <form method="POST" action="/groups/select_user" class="login-sim-form">
+    <div class="login-sim-field">
+      <label for="user_select">Agir como o usuário:</label>
+      <select name="user_id" id="user_select" class="login-sim-select" onchange="this.form.submit()">
+        <option value="">-- Nenhum (Apenas visualizar) --</option>
+        {% for u in users %}
+        <option value="{{ u.id }}" {% if current_user and current_user.id == u.id %}selected{% endif %}>{{ u.name }} ({{ u.email }})</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="groups-header">
+    <h2>📂 Grupos de Despesas</h2>
+    <a href="/groups/new" class="btn btn-primary">➕ Novo Grupo</a>
+  </div>
+
+  {% if groups %}
+  <div class="grid-groups">
+    {% for group in groups %}
+    <div class="group-card">
+      <div>
+        <h3>📁 {{ group.name }}</h3>
+        <p class="group-date">
+          Criado em {{ group.created_at.strftime('%d/%m/%Y') }}
+        </p>
+        <div class="group-stats">
+          <span class="badge badge-gray">{{ group.member_ids|length }} participantes</span>
+        </div>
+      </div>
+      <a href="/groups/{{ group.id }}" class="btn btn-secondary btn-full">Acessar Painel →</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty-state">Nenhum grupo cadastrado ainda. Crie um grupo para começar a dividir suas despesas!</p>
+  {% endif %}
+</div>
+{% endblock %}

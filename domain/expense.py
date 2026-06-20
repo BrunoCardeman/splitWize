@@ -1,5 +1,6 @@
 """Entidade de domínio: Expense."""
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List
 
 
@@ -10,8 +11,10 @@ class Expense:
     description: str
     amount: float
     paid_by_user_id: int
+    group_id: int
     participant_ids: List[int] = field(default_factory=list)
     id: int = None
+    created_at: datetime = field(default_factory=datetime.now)
 
     def __post_init__(self):
         if not self.description or not self.description.strip():
@@ -20,6 +23,8 @@ class Expense:
             raise ValueError("O valor da despesa deve ser positivo.")
         if not self.participant_ids:
             raise ValueError("A despesa precisa ter ao menos um participante.")
+        if not self.group_id:
+            raise ValueError("O grupo da despesa deve ser especificado.")
 
     def share_per_person(self) -> float:
         """Calcula a parte de cada participante."""

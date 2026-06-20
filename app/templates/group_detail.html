@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="group-header">
+  <div>
+    <span class="section-label">Painel do Grupo</span>
+    <h2>📁 {{ group.name }}</h2>
+  </div>
+  <a href="/groups" class="btn btn-secondary">← Voltar para Grupos</a>
+</div>
+
+<div class="group-dashboard">
+  <!-- Coluna da Esquerda: Despesas e Saldos -->
+  <div class="dashboard-left">
+    
+    <!-- Card de Saldos Líquidos -->
+    <div class="card">
+      <h3 class="card-title">
+        📊 Saldos Consolidados
+      </h3>
+      <div class="members-grid">
+        {% for member in members %}
+        <div class="balance-item">
+          <div class="member-name">{{ member.name }}</div>
+          {% set balance = balances.get(member.id, 0.0) %}
+          {% if balance > 0.01 %}
+            <div class="balance-val val-positive">
+              + R$ {{ "%.2f"|format(balance) }}
+            </div>
+            <span class="badge badge-green">A receber</span>
+          {% elif balance < -0.01 %}
+            <div class="balance-val val-negative">
+              - R$ {{ "%.2f"|format(balance|abs) }}
+            </div>
+            <span class="badge badge-red">A pagar</span>
+          {% else %}
+            <div class="balance-val val-neutral">
+              R$ 0,00
+            </div>
+            <span class="badge badge-gray">Quitado</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Card de Lista de Despesas -->
+    <div class="card">
+      <div class="expenses-header">
+        <h3>
+          💳 Histórico de Despesas
+        </h3>
+        <a href="/groups/{{ group.id }}/expenses/new" class="btn btn-primary btn-sm">
+          ➕ Nova Despesa
+        </a>
+      </div>
+
+      {% if expenses %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Valor</th>
+              <th>Pago por</th>
+              <th>Quem divide</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for exp in expenses %}
+            <tr>
+              <td class="expense-desc">{{ exp.description }}</td>
+              <td class="expense-val">R$ {{ "%.2f"|format(exp.amount) }}</td>
+              <td>
+                <span class="badge badge-blue">{{ users_map.get(exp.paid_by_user_id, '?') }}</span>
+              </td>
+              <td>
+                <div class="participants-list">
+                  {% for uid in exp.participant_ids %}
+                  <span class="badge badge-green">
+                    {{ users_map.get(uid, uid) }}
+                  </span>
+                  {% endfor %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="empty-state">
+        Nenhuma despesa registrada neste grupo ainda.
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Coluna da Direita: Divisão Simplificada -->
+  <div class="dashboard-right">
+    <!-- Resumo de Dívidas -->
+    <div class="card">
+      <h3 class="card-title">
+        🤝 Acerto de Contas
+      </h3>
+      {% if debts %}
+      <div class="debts-list">
+        {% for debt in debts %}
+        <div class="debt-card">
+          <div class="debt-header">
+            <span class="badge badge-red">{{ debt.from_name }}</span>
+            <span class="text-muted">deve pagar</span>
+            <span class="badge badge-green">{{ debt.to_name }}</span>
+          </div>
+          <div class="debt-actions">
+            <div class="expense-val">
+              R$ {{ "%.2f"|format(debt.amount) }}
+            </div>
+            
+            {% if session.get('user_name') == debt.to_name %}
+              <!-- Se o usuário atual logado for o credor, ele pode notificar o devedor -->
+              <form method="POST" action="/notifications/send" class="send-notification-form">
+                <input type="hidden" name="group_id" value="{{ group.id }}" />
+                <input type="hidden" name="from_user_id" value="{{ session.get('user_id') }}" />
+                <!-- Precisamos achar o ID do devedor pelo nome para enviar a notificação -->
+                {% set devedor_id = None %}
+                {% for m in members %}
+                  {% if m.name == debt.from_name %}
+                    {% set devedor_id = m.id %}
+                  {% endif %}
+                {% endfor %}
+                <input type="hidden" name="to_user_id" value="{{ devedor_id }}" />
+                <input type="hidden" name="amount" value="{{ debt.amount }}" />
+                <button type="submit" class="btn btn-primary btn-sm">
+                  🔔 Cobrar
+                </button>
+              </form>
+            {% else %}
+              <span class="debt-external-label">(Cobrança externa)</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="success-message">
+        ✅ Tudo quitado! Ninguém deve nada para ninguém.
+      </p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -11,15 +11,15 @@
       {% for debt in debts %}
       <tr>
         <td><span class="badge badge-red">{{ debt.from_name }}</span></td>
-        <td style="text-align:center; color:#718096;">→</td>
+        <td class="arrow-cell text-muted">→</td>
         <td><span class="badge badge-green">{{ debt.to_name }}</span></td>
-        <td><strong>R$ {{ "%.2f"|format(debt.amount) }}</strong></td>
+        <td><strong class="debt-amount">R$ {{ "%.2f"|format(debt.amount) }}</strong></td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <p style="color:#276749; font-weight:600;">✅ Nenhuma dívida pendente. Tudo quitado!</p>
+  <p class="success-message">✅ Nenhuma dívida pendente. Tudo quitado!</p>
   {% endif %}
 </div>
 <a href="/expenses" class="btn btn-secondary">← Voltar para Despesas</a>

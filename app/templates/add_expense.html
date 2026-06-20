@@ -1,33 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card" style="max-width:540px; margin:auto;">
+<div class="card card-narrow">
   <h2>➕ Nova Despesa</h2>
+  <p class="form-subtitle">
+    Registrando despesa no grupo: <strong>{{ group.name }}</strong>
+  </p>
   {% if error %}<div class="error">{{ error }}</div>{% endif %}
   <form method="POST">
-    <label>Descrição</label>
-    <input type="text" name="description" placeholder="Ex: Jantar na pizzaria" required />
+    <label for="description">Descrição</label>
+    <input type="text" id="description" name="description" placeholder="Ex: Jantar na pizzaria" required />
 
-    <label>Valor (R$)</label>
-    <input type="number" name="amount" step="0.01" min="0.01" placeholder="0.00" required />
+    <label for="amount">Valor (R$)</label>
+    <input type="number" id="amount" name="amount" step="0.01" min="0.01" placeholder="0.00" required />
 
-    <label>Quem pagou?</label>
-    <select name="paid_by" required>
-      <option value="">-- selecione --</option>
+    <label for="paid_by">Quem pagou?</label>
+    <select id="paid_by" name="paid_by" required>
+      <option value="">-- selecione o pagador --</option>
       {% for user in users %}
-      <option value="{{ user.id }}">{{ user.name }}</option>
+      <option value="{{ user.id }}" {% if session.get('user_id') == user.id %}selected{% endif %}>{{ user.name }}</option>
       {% endfor %}
     </select>
 
-    <label>Participantes (selecione um ou mais)</label>
-    {% for user in users %}
-    <label style="font-weight:normal; display:flex; gap:.5rem; margin-bottom:.4rem;">
-      <input type="checkbox" name="participants" value="{{ user.id }}" />
-      {{ user.name }}
-    </label>
-    {% endfor %}
-    <br/>
-    <button type="submit" class="btn btn-primary">Registrar</button>
-    <a href="/expenses" class="btn btn-secondary" style="margin-left:.5rem;">Cancelar</a>
+    <label class="checkbox-list-label">Participantes (selecione quem divide o gasto):</label>
+    <div class="checkbox-list">
+      {% for user in users %}
+      <div class="checkbox-item">
+        <input type="checkbox" id="part_{{ user.id }}" name="participants" value="{{ user.id }}" checked />
+        <label for="part_{{ user.id }}">{{ user.name }}</label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Registrar</button>
+      <a href="/groups/{{ group.id }}" class="btn btn-secondary">Cancelar</a>
+    </div>
   </form>
 </div>
 {% endblock %}
