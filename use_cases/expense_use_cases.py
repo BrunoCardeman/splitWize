@@ -26,6 +26,10 @@ class AbstractExpenseRepository(ABC):
     def find_by_group_id(self, group_id: int) -> List[Expense]:
         """Retorna todas as despesas vinculadas a um grupo."""
 
+    @abstractmethod
+    def delete(self, expense_id: int) -> None:
+        """Exclui uma despesa pelo ID."""
+
 
 class CreateExpenseUseCase:
     """HU-02 / HU-06: Registrar uma despesa compartilhada em um grupo."""
@@ -168,3 +172,17 @@ class SummaryUseCase:
                 j += 1
 
         return debts
+
+
+class DeleteExpenseUseCase:
+    """Caso de uso para excluir uma despesa."""
+
+    def __init__(self, expense_repository: AbstractExpenseRepository):
+        self._expense_repo = expense_repository
+
+    def execute(self, expense_id: int) -> None:
+        """Exclui a despesa pelo ID."""
+        expense = self._expense_repo.find_by_id(expense_id)
+        if not expense:
+            raise ValueError(f"Despesa com ID {expense_id} não encontrada.")
+        self._expense_repo.delete(expense_id)

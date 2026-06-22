@@ -1,5 +1,5 @@
 """Rotas Flask para despesas."""
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, redirect, render_template, request, url_for, flash
 
 from infra.repositories.expense_repository_sqlite import ExpenseRepositorySQLite
 from infra.repositories.user_repository_sqlite import UserRepositorySQLite
@@ -8,6 +8,7 @@ from use_cases.expense_use_cases import (
     CreateExpenseUseCase,
     ListExpensesUseCase,
     SummaryUseCase,
+    DeleteExpenseUseCase,
 )
 from use_cases.user_use_cases import ListUsersUseCase
 from use_cases.group_use_cases import GetGroupDetailsUseCase, ListAllGroupsUseCase
@@ -75,3 +76,45 @@ def add_expense(group_id: int):
 def summary():
     """HU-04: Redireciona para grupos, pois o resumo agora é por grupo."""
     return redirect(url_for("groups.list_groups"))
+
+
+@expense_bp.route("/groups/<int:group_id>/expenses/<int:expense_id>/delete", methods=["POST"])
+def delete_expense(group_id: int, expense_id: int):
+    """Exclui uma despesa e redireciona de volta para os detalhes do grupo."""
+    try:
+        use_case = DeleteExpenseUseCase(_get_expense_repo())
+        use_case.execute(expense_id)
+        flash("Despesa excluída com sucesso!", "success")
+    except ValueError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("groups.group_detail", group_id=group_id))
+
+
+@expense_bp.route("/groups/<int:group_id>/debts/settle", methods=["POST"])
+def settle_debt(group_id: int):
+    """Registra a quitação de uma dívida criando um registro especial de pagamento."""
+    debtor_id = int(request.form.get("debtor_id"))
+    creditor_id = int(request.form.get("creditor_id"))
+    amount = float(request.form.get("amount"))
+
+    try:
+        debtor = _get_user_repo().find_by_id(debtor_id)
+        creditor = _get_user_repo().find_by_id(creditor_id)
+        if not debtor or not creditor:
+            raise ValueError("Usuário(s) envolvido(s) na dívida não encontrado(s).")
+
+        desc = f"Pagamento: {debtor.name} -> {creditor.name}"
+
+        use_case = CreateExpenseUseCase(_get_expense_repo(), _get_user_repo(), _get_group_repo())
+        use_case.execute(
+            description=desc,
+            amount=amount,
+            paid_by_user_id=debtor_id,
+            group_id=group_id,
+            participant_ids=[creditor_id],
+        )
+        flash("Pagamento registrado com sucesso!", "success")
+    except (ValueError, TypeError) as exc:
+        flash(str(exc), "error")
+
+    return redirect(url_for("groups.group_detail", group_id=group_id))

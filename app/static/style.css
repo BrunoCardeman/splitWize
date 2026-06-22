@@ -212,6 +212,16 @@ tr:last-child td {
   background: #e2e8f0;
 }
 
+.btn-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
+
 .btn-sm {
   padding: 0.35rem 0.7rem;
   font-size: 0.75rem;

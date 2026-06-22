@@ -63,6 +63,7 @@
               <th>Valor</th>
               <th>Pago por</th>
               <th>Quem divide</th>
+              <th class="actions-header">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -81,6 +82,13 @@
                   </span>
                   {% endfor %}
                 </div>
+              </td>
+              <td class="user-actions">
+                <form method="POST" action="/groups/{{ group.id }}/expenses/{{ exp.id }}/delete" onsubmit="return confirm('Tem certeza que deseja excluir esta despesa?')" class="send-notification-form">
+                  <button type="submit" class="btn btn-danger btn-sm">
+                    ❌ Excluir
+                  </button>
+                </form>
               </td>
             </tr>
             {% endfor %}
@@ -116,27 +124,46 @@
               R$ {{ "%.2f"|format(debt.amount) }}
             </div>
             
-            {% if session.get('user_name') == debt.to_name %}
-              <!-- Se o usuário atual logado for o credor, ele pode notificar o devedor -->
-              <form method="POST" action="/notifications/send" class="send-notification-form">
-                <input type="hidden" name="group_id" value="{{ group.id }}" />
-                <input type="hidden" name="from_user_id" value="{{ session.get('user_id') }}" />
-                <!-- Precisamos achar o ID do devedor pelo nome para enviar a notificação -->
-                {% set devedor_id = None %}
-                {% for m in members %}
-                  {% if m.name == debt.from_name %}
-                    {% set devedor_id = m.id %}
-                  {% endif %}
-                {% endfor %}
-                <input type="hidden" name="to_user_id" value="{{ devedor_id }}" />
-                <input type="hidden" name="amount" value="{{ debt.amount }}" />
-                <button type="submit" class="btn btn-primary btn-sm">
-                  🔔 Cobrar
-                </button>
-              </form>
-            {% else %}
-              <span class="debt-external-label">(Cobrança externa)</span>
-            {% endif %}
+            {% set devedor_id = None %}
+            {% set credor_id = None %}
+            {% for m in members %}
+              {% if m.name == debt.from_name %}
+                {% set devedor_id = m.id %}
+              {% endif %}
+              {% if m.name == debt.to_name %}
+                {% set credor_id = m.id %}
+              {% endif %}
+            {% endfor %}
+
+            <div class="participants-list">
+              {% if session.get('user_id') == credor_id %}
+                <!-- Se o usuário atual logado for o credor, ele pode notificar o devedor -->
+                <form method="POST" action="/notifications/send" class="send-notification-form">
+                  <input type="hidden" name="group_id" value="{{ group.id }}" />
+                  <input type="hidden" name="from_user_id" value="{{ session.get('user_id') }}" />
+                  <input type="hidden" name="to_user_id" value="{{ devedor_id }}" />
+                  <input type="hidden" name="amount" value="{{ debt.amount }}" />
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    🔔 Cobrar
+                  </button>
+                </form>
+              {% endif %}
+
+              {% if session.get('user_id') in [devedor_id, credor_id] %}
+                <form method="POST" action="/groups/{{ group.id }}/debts/settle" class="send-notification-form">
+                  <input type="hidden" name="debtor_id" value="{{ devedor_id }}" />
+                  <input type="hidden" name="creditor_id" value="{{ credor_id }}" />
+                  <input type="hidden" name="amount" value="{{ debt.amount }}" />
+                  <button type="submit" class="btn btn-secondary btn-sm">
+                    💵 Quitar
+                  </button>
+                </form>
+              {% endif %}
+
+              {% if session.get('user_id') not in [devedor_id, credor_id] %}
+                <span class="debt-external-label">(Cobrança externa)</span>
+              {% endif %}
+            </div>
           </div>
         </div>
         {% endfor %}

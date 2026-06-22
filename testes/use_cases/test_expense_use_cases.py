@@ -9,6 +9,7 @@ from use_cases.expense_use_cases import (
     CreateExpenseUseCase,
     ListExpensesUseCase,
     SummaryUseCase,
+    DeleteExpenseUseCase,
 )
 
 
@@ -190,3 +191,28 @@ class TestSummaryUseCase:
         group_repo.find_by_id.return_value = Group(id=1, name="Praia", created_by_user_id=1)
         debts = SummaryUseCase(expense_repo, user_repo, group_repo).execute(1)
         assert debts == []
+
+
+class TestDeleteExpenseUseCase:
+    """Testes para DeleteExpenseUseCase."""
+
+    def test_delete_expense_success(self):
+        """Deve chamar delete no repositório se a despesa existir."""
+        expense = _make_expense(1, "Jantar", 60.0, paid_by=1, participants=[1])
+        expense_repo = MagicMock()
+        expense_repo.find_by_id.return_value = expense
+        
+        use_case = DeleteExpenseUseCase(expense_repo)
+        use_case.execute(1)
+        
+        expense_repo.find_by_id.assert_called_once_with(1)
+        expense_repo.delete.assert_called_once_with(1)
+
+    def test_delete_expense_not_found_raises(self):
+        """Deve lançar ValueError se a despesa não for encontrada."""
+        expense_repo = MagicMock()
+        expense_repo.find_by_id.return_value = None
+        
+        use_case = DeleteExpenseUseCase(expense_repo)
+        with pytest.raises(ValueError, match="Despesa com ID 99 não encontrada"):
+            use_case.execute(99)

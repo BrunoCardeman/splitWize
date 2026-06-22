@@ -151,3 +151,20 @@ class ExpenseRepositorySQLite(AbstractExpenseRepository):
             ]
         finally:
             conn.close()
+
+    def delete(self, expense_id: int) -> None:
+        """Exclui uma despesa e suas relações de participantes."""
+        conn = get_connection()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "DELETE FROM expense_participants WHERE expense_id = ?",
+                    (expense_id,),
+                )
+                cursor.execute(
+                    "DELETE FROM expenses WHERE id = ?",
+                    (expense_id,),
+                )
+        finally:
+            conn.close()

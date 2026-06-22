@@ -117,3 +117,75 @@ def test_simulated_login_and_notifications(client):
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     assert "Ana lembrou que você deve R$ 40.00 no grupo" in html
+
+
+def test_expense_deletion(client):
+    """Deve cadastrar uma despesa e então excluí-la, zerando os saldos."""
+    # 1. Setup
+    client.post("/users/new", data={"name": "Ana", "email": "ana@e.com"}) # ID 1
+    client.post("/users/new", data={"name": "Bob", "email": "bob@e.com"}) # ID 2
+    client.post("/groups/new", data={
+        "name": "Churrasco",
+        "created_by": "1",
+        "members": ["1", "2"]
+    }) # ID 1
+
+    # 2. Criar despesa (R$ 60)
+    client.post("/groups/1/expenses/new", data={
+        "description": "Bebidas",
+        "amount": "60.00",
+        "paid_by": "1",
+        "participants": ["1", "2"]
+    })
+
+    # 3. Excluir despesa
+    response = client.post("/groups/1/expenses/1/delete", follow_redirects=True)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    
+    # 4. Verificar se a despesa sumiu e os saldos voltaram ao neutro (R$ 0,00)
+    assert "Bebidas" not in html
+    assert "Despesa excluída com sucesso!" in html
+    assert "R$ 0,00" in html
+
+
+def test_debt_settlement(client):
+    """Deve criar uma dívida e quitá-la criando um lançamento de pagamento."""
+    # 1. Setup (Ana e Bob)
+    client.post("/users/new", data={"name": "Ana", "email": "ana@e.com"}) # ID 1
+    client.post("/users/new", data={"name": "Bob", "email": "bob@e.com"}) # ID 2
+    client.post("/groups/new", data={
+        "name": "Churrasco",
+        "created_by": "1",
+        "members": ["1", "2"]
+    }) # ID 1
+
+    # 2. Ana paga R$ 60. Bob deve R$ 30.
+    client.post("/groups/1/expenses/new", data={
+        "description": "Carnes",
+        "amount": "60.00",
+        "paid_by": "1",
+        "participants": ["1", "2"]
+    })
+
+    # 3. Login como Bob (ID 2)
+    client.post("/groups/select_user", data={"user_id": "2"})
+
+    # 4. Quitar a dívida de R$ 30 de Bob para Ana
+    response = client.post("/groups/1/debts/settle", data={
+        "debtor_id": "2",
+        "creditor_id": "1",
+        "amount": "30.00"
+    }, follow_redirects=True)
+
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    
+    # 5. Deve constar a mensagem de sucesso e a nova despesa do tipo pagamento
+    assert "Pagamento registrado com sucesso!" in html
+    assert "Pagamento: Bob" in html
+    assert "R$ 30.00" in html
+    # Os saldos devem voltar a R$ 0,00 e acerto de contas deve mostrar que está tudo quitado
+    assert "Tudo quitado!" in html
+    assert "R$ 0,00" in html
+
